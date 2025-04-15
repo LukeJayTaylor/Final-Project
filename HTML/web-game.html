@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Game - Tic Tac Toe</title>
+    <link rel="stylesheet" href="../Scratch Styles/scratch.css">
+    <style>
+        body {
+          font-family: Arial, sans-serif;
+          text-align: center;
+          padding-top: 50px;
+        }
+
+        #board {
+          display: grid;
+          grid-template-columns: repeat(3, 100px);
+          grid-gap: 5px;
+          justify-content: center;
+          margin: 0 auto;
+        }
+
+        .cell {
+          width: 100px;
+          height: 100px;
+          background: #f2f2f2;
+          font-size: 2em;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          border: 2px solid #333;
+          user-select: none;
+        }
+
+        #status {
+          margin-top: 20px;
+          font-size: 1.2em;
+        }
+
+        button {
+          margin-top: 15px;
+          padding: 10px 20px;
+          font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="common header">
+        <img class="margin" src="../Scratch Images/tictactoe.jpg" height="90px" alt="Tic-Tac-Toe">
+        <h1 id="top">Play Tic-Tac-Toe</h1>
+    </div>
+    <div class="common menu2">
+        <div class="underline sides">Menu</div><br>
+        <a href="../index.html">Home Page</a> <br>
+        <a href="education.html">Education</a> <br>
+        <a href="skills.html">Skills</a> <br>
+        <a href="ScratchPage.html">Favorite Books</a><br>
+        <a href="web-game.html">Play Tic-Tac-Toe</a>
+        <a href="tableau.html">Tableau Page</a>
+    </div>
+    <h1 style="margin-top: 2em;">Tic-Tac-Toe: Man vs Computer</h1>
+
+    <div id="board"></div>
+    <div id="status">Your Turn</div>
+    <button onclick="resetGame()">Restart</button>
+
+    <script>
+      const board = document.getElementById('board');
+      const status = document.getElementById('status');
+      let currentPlayer = 'X';
+      let cells = Array(9).fill('');
+      let gameOver = false;
+      let playerStarts = true; // Player starts first on page load
+
+      function renderBoard() {
+        board.innerHTML = '';
+        cells.forEach((cell, i) => {
+          const div = document.createElement('div');
+          div.className = 'cell';
+          div.textContent = cell;
+          div.onclick = () => handleClick(i);
+          board.appendChild(div);
+        });
+      }
+
+      function handleClick(i) {
+        if (cells[i] !== '' || gameOver || currentPlayer !== 'X') return;
+
+        cells[i] = 'X';
+        renderBoard();
+
+        if (checkGameOver()) return;
+
+        currentPlayer = 'O';
+        status.textContent = "Computer's turn...";
+        setTimeout(computerMove, 500); // delay for realism
+      }
+
+      function computerMove() {
+        if (gameOver) return;
+
+        const bestMove = minimax(cells, 'O'); // Find best move for the computer
+        cells[bestMove.index] = 'O';
+        renderBoard();
+
+        if (checkGameOver()) return;
+
+        currentPlayer = 'X';
+        status.textContent = "Your Turn";
+      }
+
+      function minimax(board, player) {
+        const winner = checkWinner();
+        if (winner) {
+          return winner === 'O' ? { score: 1 } : { score: -1 };
+        } else if (!board.includes('')) {
+          return { score: 0 }; // Draw
+        }
+
+        let bestMove = { score: player === 'O' ? -Infinity : Infinity, index: -1 };
+
+        board.forEach((cell, index) => {
+          if (cell === '') {
+            board[index] = player; // Make the move
+            const result = minimax(board, player === 'O' ? 'X' : 'O'); // Recursively call minimax
+
+            // Undo the move
+            board[index] = '';
+
+            if (player === 'O') {
+              if (result.score > bestMove.score) {
+                bestMove = { score: result.score, index };
+              }
+            } else {
+              if (result.score < bestMove.score) {
+                bestMove = { score: result.score, index };
+              }
+            }
+          }
+        });
+
+        return bestMove;
+      }
+
+      function checkWinner() {
+        const wins = [
+          [0, 1, 2], [3, 4, 5], [6, 7, 8],
+          [0, 3, 6], [1, 4, 7], [2, 5, 8],
+          [0, 4, 8], [2, 4, 6]
+        ];
+        for (let [a, b, c] of wins) {
+          if (cells[a] && cells[a] === cells[b] && cells[a] === cells[c]) {
+            return cells[a]; // returns 'X' or 'O'
+          }
+        }
+        return null;
+      }
+
+      function checkGameOver() {
+        const winner = checkWinner();
+        if (winner) {
+          if (winner === 'X') {
+            status.textContent = "You win!";
+          } else if (winner === 'O') {
+            status.textContent = "Computer wins!";
+          }
+          gameOver = true;
+          return true;
+        } else if (!cells.includes('')) {
+          status.textContent = "It's a draw!";
+          gameOver = true;
+          return true;
+        }
+        return false;
+      }
+
+      function resetGame() {
+        cells = Array(9).fill('');
+        gameOver = false;
+        playerStarts = !playerStarts; // Alternate who starts
+
+        if (playerStarts) {
+          currentPlayer = 'X';
+          status.textContent = "Your Turn";
+          renderBoard();
+        } else {
+          currentPlayer = 'O';
+          status.textContent = "Computer's turn...";
+          renderBoard();
+          setTimeout(computerMove, 500);
+        }
+      }
+
+      // Initial game start — player goes first
+      renderBoard();
+    </script>
+</body>
+</html>
